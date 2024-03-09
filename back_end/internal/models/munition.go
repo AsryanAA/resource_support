@@ -3,20 +3,20 @@ package models
 import "database/sql"
 
 type Munition struct {
-	RN            string `json:"rn"`
-	CRN           string `json:"crn"`
-	Version       string `json:"version"`
-	Code          string `json:"code"`
-	Name          string `json:"name"`
-	DicNomNs      string `json:"dicnomns"`
-	NomModif      string `json:"nommodif"`
-	PackModif     string `json:"packmodif"`
-	KompSum       string `json:"kompsum"`
-	Cloth         string `json:"cloth"`
-	IgnoreSupply  string `json:"ignoresupply"`
-	Sex           string `json:"sex"`
-	UseFaktHeihth string `json:"usefaktheihth"`
-	BegstepHeihth string `json:"begstepheihth"`
+	RN            string         `json:"rn"`
+	CRN           string         `json:"crn"`
+	Version       string         `json:"version"`
+	Code          string         `json:"code"`
+	Name          string         `json:"name"`
+	DicNomNs      string         `json:"dicnomns"`
+	NomModif      sql.NullString `json:"nommodif"`
+	PackModif     string         `json:"packmodif"`
+	KompSum       sql.NullString `json:"kompsum"`
+	Cloth         string         `json:"cloth"`
+	IgnoreSupply  string         `json:"ignoresupply"`
+	Sex           string         `json:"sex"`
+	UseFaktHeihth string         `json:"usefaktheihth"`
+	BegstepHeihth string         `json:"begstepheihth"`
 }
 
 type MunitionSew struct {
