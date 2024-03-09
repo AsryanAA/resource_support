@@ -1,0 +1,9 @@
+.default_link {
+    text-decoration: none;
+    color: white;
+}
+
+.active_link {
+    text-decoration: none;
+    color: green;
+}

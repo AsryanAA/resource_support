@@ -1,0 +1,43 @@
+body {
+    display: flex;
+    justify-content: center;
+    margin-top: 10%;
+}
+
+.container {
+    width: 250px;
+    height: 250px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+}
+
+.sign_in {
+    background: #20294A;
+    color: white;
+    width: 210px;
+    border-radius: 26px;
+}
+
+input {
+    width: 200px;
+    outline: unset;
+    border: none;
+    border-bottom: 1px solid grey;
+    margin: 7px;
+    padding: 3px;
+}
+
+::placeholder {
+    font-size: 0.75em;
+}
+
+.icon {
+    position: relative;
+    margin-top: 10px;
+}
+
+.hide {
+    cursor: pointer;
+}
