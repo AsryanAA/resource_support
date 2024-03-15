@@ -5,6 +5,7 @@ import (
 	"back/internal/models"
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"github.com/jackc/pgx/v5"
 	"log"
@@ -22,7 +23,13 @@ func CreateDivision(division models.Division) error {
 		if okOracle {
 			_, err := connOracle.Exec(`INSERT INTO parus.udo_division
 				VALUES (:1, :2, :3)`, division.Id, division.Name, division.Description)
-			return err
+			if err != nil {
+				textError := err.Error()
+				if textError[11:28] == models.DataBaseErrors[1] {
+					return errors.New(models.ErrorUnique)
+				}
+				return err
+			}
 		}
 	}
 	return nil
@@ -35,8 +42,7 @@ func ReadDivisions() ([]models.Division, error) {
 	if okPostgres {
 		rows, err := connPostgres.Query(context.Background(), `SELECT * FROM parus.udo_division`)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "Ошибка получения данных: %v\n", err)
-			os.Exit(1)
+			return nil, err
 		}
 		defer rows.Close()
 		for rows.Next() {
@@ -65,7 +71,6 @@ func ReadDivisions() ([]models.Division, error) {
 				err = rows.Scan(
 					&division.Id, &division.Name, &division.Description)
 				if err != nil {
-					fmt.Println(err)
 					return nil, err
 				}
 				divisions = append(divisions, division)
@@ -83,8 +88,7 @@ func UpdateDivision(division models.Division) error {
 	} else {
 		connOracle, okOracle := database.DB.(*sql.DB)
 		if okOracle {
-			_, err := connOracle.Exec(`UPDATE parus.udo_division SET "name"=:2, description=:3
-                              				 WHERE id=:1`,
+			_, err := connOracle.Exec(`UPDATE parus.udo_division SET "name"=:2, description=:3 WHERE id=:1`,
 				division.Name, division.Description, division.Id)
 			return err
 		}

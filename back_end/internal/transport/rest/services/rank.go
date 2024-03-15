@@ -5,10 +5,10 @@ import (
 	"back/internal/models"
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"github.com/jackc/pgx/v5"
 	"log"
-	"os"
 )
 
 func CreateRank(rank models.Rank) error {
@@ -22,7 +22,13 @@ func CreateRank(rank models.Rank) error {
 		if okOracle {
 			_, err := connOracle.Exec(`INSERT INTO parus.udo_rank
 				VALUES (:1, :2, :3)`, rank.Id, rank.Name, rank.Description)
-			return err
+			if err != nil {
+				textError := err.Error()
+				if textError[11:28] == models.DataBaseErrors[1] {
+					return errors.New(models.ErrorUnique)
+				}
+				return err
+			}
 		}
 	}
 	return nil
@@ -35,8 +41,7 @@ func ReadRanks() ([]models.Rank, error) {
 	if okPostgres {
 		rows, err := connPostgres.Query(context.Background(), `SELECT * FROM parus.udo_rank`)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "Ошибка получения данных: %v\n", err)
-			os.Exit(1)
+			return nil, err
 		}
 		defer rows.Close()
 		for rows.Next() {
@@ -52,8 +57,7 @@ func ReadRanks() ([]models.Rank, error) {
 		if okOracle {
 			rows, err := connOracle.Query(`SELECT * FROM parus.udo_rank`)
 			if err != nil {
-				fmt.Fprintf(os.Stderr, "Ошибка получения данных: %v\n", err)
-				os.Exit(1)
+				return nil, err
 			}
 			defer func(rows *sql.Rows) {
 				err = rows.Close()
@@ -83,8 +87,7 @@ func UpdateRank(rank models.Rank) error {
 	} else {
 		connOracle, okOracle := database.DB.(*sql.DB)
 		if okOracle {
-			_, err := connOracle.Exec(`UPDATE parus.udo_rank SET "name"=:2, description=:3
-                              				 WHERE id=:1`,
+			_, err := connOracle.Exec(`UPDATE parus.udo_rank SET "name"=:2, description=:3 WHERE id=:1`,
 				rank.Name, rank.Description, rank.Id)
 			return err
 		}

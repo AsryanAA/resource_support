@@ -3,6 +3,7 @@ package rest
 import (
 	docs "back/api"
 	"back/internal/transport/rest/handlers"
+	"back/internal/transport/rest/mw"
 	"fmt"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -35,7 +36,7 @@ func InitServer(host string, port int) error {
 
 	auth := router.Group("auth")
 	{
-		auth.POST("login", handlers.CheckUser)
+		auth.POST("login", handlers.SingIn)
 	}
 
 	api := router.Group("api")
@@ -82,7 +83,7 @@ func InitServer(host string, port int) error {
 
 			accessor := v1.Group("accessor")
 			{
-				accessor.POST("create", handlers.CreateAccessor)
+				accessor.POST("create", mw.ValidationToken(), handlers.CreateAccessor)
 				accessor.GET("read", handlers.ReadAccessors)
 				accessor.PATCH("update", handlers.UpdateAccessor)
 				accessor.DELETE("delete/:id", handlers.DeleteAccessor)

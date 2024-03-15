@@ -5,24 +5,30 @@ import (
 	"back/internal/models"
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"github.com/jackc/pgx/v5"
 	"log"
-	"os"
 )
 
 func CreatePosition(position models.Position) error {
 	connPostgres, okPostgres := database.DB.(*pgx.Conn)
 	if okPostgres {
 		_, err := connPostgres.Exec(context.Background(), `INSERT INTO parus.udo_position
-			VALUES ($1, $2, $3, $4)`, position.Id, position.Name, position.Description, position.DivisionId)
+			VALUES ($1, $2, $3, $4)`, position.Id, position.Name, position.Description)
 		return err
 	} else {
 		connOracle, okOracle := database.DB.(*sql.DB)
 		if okOracle {
 			_, err := connOracle.Exec(`INSERT INTO parus.udo_position
-				VALUES (:1, :2, :3, :4)`, position.Id, position.Name, position.Description, position.DivisionId)
-			return err
+				VALUES (:1, :2, :3)`, position.Id, position.Name, position.Description)
+			if err != nil {
+				textError := err.Error()
+				if textError[11:28] == models.DataBaseErrors[1] {
+					return errors.New(models.ErrorUnique)
+				}
+				return err
+			}
 		}
 	}
 	return nil
@@ -35,8 +41,7 @@ func ReadPositions() ([]models.Position, error) {
 	if okPostgres {
 		rows, err := connPostgres.Query(context.Background(), `SELECT * FROM parus.udo_position`)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "Ошибка получения данных: %v\n", err)
-			os.Exit(1)
+			return nil, err
 		}
 		defer rows.Close()
 		for rows.Next() {
@@ -52,8 +57,7 @@ func ReadPositions() ([]models.Position, error) {
 		if okOracle {
 			rows, err := connOracle.Query(`SELECT * FROM parus.udo_position`)
 			if err != nil {
-				fmt.Fprintf(os.Stderr, "Ошибка получения данных: %v\n", err)
-				os.Exit(1)
+				return nil, err
 			}
 			defer func(rows *sql.Rows) {
 				err = rows.Close()
@@ -63,7 +67,7 @@ func ReadPositions() ([]models.Position, error) {
 			}(rows)
 			for rows.Next() {
 				err = rows.Scan(
-					&position.Id, &position.Name, &position.Description, &position.DivisionId)
+					&position.Id, &position.Name, &position.Description)
 				if err != nil {
 					fmt.Println(err)
 					return nil, err
@@ -83,8 +87,7 @@ func UpdatePosition(position models.Position) error {
 	} else {
 		connOracle, okOracle := database.DB.(*sql.DB)
 		if okOracle {
-			_, err := connOracle.Exec(`UPDATE parus.udo_position SET "name"=:2, description=:3, division_id=:4
-                              				 WHERE id=:1`,
+			_, err := connOracle.Exec(`UPDATE parus.udo_position SET "name"=:2, description=:3 WHERE id=:1`,
 				position.Name, position.Description, position.Id)
 			return err
 		}

@@ -3,6 +3,7 @@ package handlers
 import (
 	"back/internal/models"
 	"back/internal/transport/rest/services"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"strconv"
@@ -20,7 +21,7 @@ func CreateDivision(ctx *gin.Context) {
 	err := services.CreateDivision(newDivision)
 	if err != nil {
 		ctx.IndentedJSON(http.StatusBadRequest, gin.H{
-			"errorMessage": err,
+			"errorMessage": fmt.Sprintf("Операция завершилась с ошибкой: %v", err),
 			"error":        "Создание не произошло",
 		})
 	} else {
