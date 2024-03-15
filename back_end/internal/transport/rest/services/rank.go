@@ -87,7 +87,7 @@ func UpdateRank(rank models.Rank) error {
 	} else {
 		connOracle, okOracle := database.DB.(*sql.DB)
 		if okOracle {
-			_, err := connOracle.Exec(`UPDATE parus.udo_rank SET "name"=:2, description=:3 WHERE id=:1`,
+			_, err := connOracle.Exec(`UPDATE parus.udo_rank SET name=:2, description=:3 WHERE id=:1`,
 				rank.Name, rank.Description, rank.Id)
 			return err
 		}

@@ -2,3 +2,9 @@
     margin: 0;
     padding: 0;
 }
+
+body {
+    background-image: url('../public/background.png');
+    max-width: 1000px;
+    margin: 0 auto;
+}

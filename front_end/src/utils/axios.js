@@ -1,9 +1,10 @@
 import axios from 'axios'
+import { useJWT } from '../store'
 
 const instance = axios.create({
-    baseURL: 'http://localhost:8080/api/v1/',
+    baseURL: 'http://localhost:8080/',
     headers: {
-        Authorization: `Bearer `// + getTokenFromLocalStorage() TODO: реализовать позже
+        Authorization: `Bearer ` + 'token' // TODO: реализовать позже
     },
     timeout: 1000
 })

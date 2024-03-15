@@ -1,12 +1,10 @@
 import { create } from 'zustand'
 import { devtools, persist } from 'zustand/middleware' // для анализа в браузере
 import instance from '../utils/axios'
+import accessors from "../components/Dictionaries/Accessors/Accessors";
 
 export const useAccessors = create(devtools((set, get) => ({
-    accessors: [{
-        id: new Date,
-        title: 'Example'
-    }],
+    accessors: [],
     loading: false,
     error: null,
     /*
@@ -43,7 +41,7 @@ export const useAccessors = create(devtools((set, get) => ({
     readAccessors: async () => {
         set({ loading: true })
         try {
-            const resp = await instance.get('accessor/read')
+            const resp = await instance.get('api/v1/accessor/read')
             // console.log('this is data', resp.data)
             set({ accessors: resp.data, error: null })
         } catch (error) {
@@ -51,5 +49,25 @@ export const useAccessors = create(devtools((set, get) => ({
         } finally {
             set({ loading: false })
         }
+    },
+    //Delete
+    deleteAccessor: async (id) => {
+        set({ loading: true })
+        try {
+            const resp = await instance.delete(`api/v1/accessor/delete/${id}`)
+            const data = accessors.filter((accessor) => accessor.id !== id)
+            set( { accessors: data, error: null })
+        } catch (error) {
+            set({ error: error.message })
+        } finally {
+            set({ loading: false })
+        }
+    }
+})))
+
+export const useJWT = create(devtools((set, get) => ({
+    jwt: 'empty',
+    setJWT: (token) => {
+        set({ jwt: token })
     }
 })))

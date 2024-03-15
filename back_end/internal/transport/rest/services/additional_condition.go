@@ -15,15 +15,15 @@ func CreateAdditionalCondition(addCond models.AdditionalCondition) error {
 	connPostgres, okPostgres := database.DB.(*pgx.Conn)
 	if okPostgres {
 		_, err := connPostgres.Exec(context.Background(), `INSERT INTO parus.udo_additional_condition
-			VALUES ($1, $2, $3, $4, $5, $6, $7)`, addCond.Id, addCond.NormId, addCond.MunitionId, addCond.RankId, addCond.PositionId,
-			addCond.DivisionId, addCond.Sex)
+			VALUES ($1, $2, $3, $4, $5, $6, $7)`, addCond.Id, addCond.NormMunitionId, addCond.MunitionId, addCond.Description,
+			addCond.RankId, addCond.PositionId, addCond.DivisionId, addCond.Sex, addCond.Climate, addCond.ReplaceMunitionId)
 		return err
 	} else {
 		connOracle, okOracle := database.DB.(*sql.DB)
 		if okOracle {
 			_, err := connOracle.Exec(`INSERT INTO parus.udo_additional_condition
-				VALUES (:1, :2, :3, :4, :5, :6, :7)`, addCond.Id, addCond.NormId, addCond.MunitionId, addCond.RankId, addCond.PositionId,
-				addCond.DivisionId, addCond.Sex)
+				VALUES (:1, :2, :3, :4, :5, :6, :7)`, addCond.Id, addCond.NormMunitionId, addCond.MunitionId, addCond.Description,
+				addCond.RankId, addCond.PositionId, addCond.DivisionId, addCond.Sex, addCond.Climate, addCond.ReplaceMunitionId)
 			return err
 		}
 	}
@@ -42,7 +42,8 @@ func ReadAdditionalConditions() ([]models.AdditionalCondition, error) {
 		}
 		defer rows.Close()
 		for rows.Next() {
-			err = rows.Scan()
+			err = rows.Scan(&addCond.Id, &addCond.NormMunitionId, &addCond.MunitionId, &addCond.Description, &addCond.RankId,
+				&addCond.PositionId, &addCond.DivisionId, &addCond.Sex, &addCond.Climate, &addCond.ReplaceMunitionId)
 			if err != nil {
 				return nil, err
 			}
@@ -64,9 +65,8 @@ func ReadAdditionalConditions() ([]models.AdditionalCondition, error) {
 				}
 			}(rows)
 			for rows.Next() {
-				err = rows.Scan(
-					&addCond.Id, &addCond.NormId, &addCond.MunitionId, &addCond.RankId, &addCond.PositionId,
-					&addCond.DivisionId, &addCond.Sex)
+				err = rows.Scan(&addCond.Id, &addCond.NormMunitionId, &addCond.MunitionId, &addCond.Description, &addCond.RankId,
+					&addCond.PositionId, &addCond.DivisionId, &addCond.Sex, &addCond.Climate, &addCond.ReplaceMunitionId)
 				if err != nil {
 					fmt.Println(err)
 					return nil, err
@@ -86,10 +86,10 @@ func UpdateAdditionalCondition(addCond models.AdditionalCondition) error {
 	} else {
 		connOracle, okOracle := database.DB.(*sql.DB)
 		if okOracle {
-			_, err := connOracle.Exec(`UPDATE parus.udo_additional_condition SET norm_id=:2, munition_id=:3,
-                                      rank_id=:4, position_id=:5, division_id=:6, sex=:7 WHERE id=:1`,
-				addCond.Id, addCond.NormId, addCond.MunitionId, addCond.RankId, addCond.PositionId,
-				addCond.DivisionId, addCond.Sex)
+			_, err := connOracle.Exec(`UPDATE parus.udo_additional_condition SET norm_munition_id=:2, munition_id=:3,
+                description=:4, rank_id=:5, position_id=:6, division_id=:7, sex=:8, climate=:9, replace_munition_id=:10 WHERE id=:1`,
+				addCond.Id, addCond.NormMunitionId, addCond.MunitionId, addCond.Description, addCond.RankId, addCond.PositionId,
+				addCond.DivisionId, addCond.Sex, addCond.Climate, addCond.ReplaceMunitionId)
 			return err
 		}
 	}

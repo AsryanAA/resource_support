@@ -1,0 +1,10 @@
+.page_not_found {
+    display: flex;
+    justify-content: center;
+}
+
+.page_not_found img {
+    width: 800px;
+    height: 500px;
+    border-radius: 15px;
+}
