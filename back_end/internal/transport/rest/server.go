@@ -113,6 +113,18 @@ func InitServer(host string, port int) error {
 				munitionMod.DELETE("delete/:id", handlers.DeleteMunitionMod)
 			}
 
+			pKart := v1.Group("pkart")
+			{
+				pKart.POST("create", handlers.CreatePKart)
+				pKart.GET("read", handlers.ReadPKarts)
+			}
+
+			pKartNorm := v1.Group("pkart_norm")
+			{
+				pKartNorm.POST("create", handlers.CreatePKartNorm)
+				pKartNorm.GET("read", handlers.ReadPKartNorms)
+			}
+
 			normMunit := v1.Group("norm_munit")
 			{
 				normMunit.POST("create", handlers.CreateNormMunit)
