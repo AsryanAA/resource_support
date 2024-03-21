@@ -14,16 +14,16 @@ import (
 func CreatePersonalCard(personalCard models.PersonalCard) error {
 	connPostgres, okPostgres := database.DB.(*pgx.Conn)
 	if okPostgres {
-		_, err := connPostgres.Exec(context.Background(), `INSERT INTO parus.udo_personal_cards
-			VALUES ($1, $2, $3, $4, $5, $6, $7)`, personalCard.Id, personalCard.PhoneNumber, personalCard.LKartId,
-			personalCard.PositionId, personalCard.DivisionId, personalCard.RankId)
+		_, err := connPostgres.Exec(context.Background(), `INSERT INTO parus.udo_personal_card
+			VALUES ($1, $2, $3, $4, $5, $6, $7)`, personalCard.Id, personalCard.FIO, personalCard.JobBeginDate, personalCard.Sex,
+			personalCard.DivisionId, personalCard.PositionId, personalCard.RankId, personalCard.Climate)
 		return err
 	} else {
 		connOracle, okOracle := database.DB.(*sql.DB)
 		if okOracle {
-			_, err := connOracle.Exec(`INSERT INTO parus.udo_personal_cards
-				VALUES (:1, :2, :3, :4, :5, :6, :7)`, personalCard.Id, personalCard.PhoneNumber, personalCard.LKartId,
-				personalCard.PositionId, personalCard.DivisionId, personalCard.RankId)
+			_, err := connOracle.Exec(`INSERT INTO parus.udo_personal_card
+				VALUES (:1, :2, :3, :4, :5, :6, :7)`, personalCard.Id, personalCard.FIO, personalCard.JobBeginDate, personalCard.Sex,
+				personalCard.DivisionId, personalCard.PositionId, personalCard.RankId, personalCard.Climate)
 			return err
 		}
 	}
@@ -35,7 +35,7 @@ func ReadPersonalCards() ([]models.PersonalCard, error) {
 	var personalCard models.PersonalCard
 	connPostgres, okPostgres := database.DB.(*pgx.Conn)
 	if okPostgres {
-		rows, err := connPostgres.Query(context.Background(), `SELECT * FROM parus.udo_personal_cards`)
+		rows, err := connPostgres.Query(context.Background(), `SELECT * FROM parus.udo_personal_card`)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Ошибка получения данных: %v\n", err)
 			os.Exit(1)
@@ -52,7 +52,7 @@ func ReadPersonalCards() ([]models.PersonalCard, error) {
 	} else {
 		connOracle, okOracle := database.DB.(*sql.DB)
 		if okOracle {
-			rows, err := connOracle.Query(`SELECT * FROM parus.udo_personal_cards`)
+			rows, err := connOracle.Query(`SELECT * FROM parus.udo_personal_card`)
 			if err != nil {
 				fmt.Fprintf(os.Stderr, "Ошибка получения данных: %v\n", err)
 				os.Exit(1)
@@ -65,8 +65,8 @@ func ReadPersonalCards() ([]models.PersonalCard, error) {
 			}(rows)
 			for rows.Next() {
 				err = rows.Scan(
-					&personalCard.Id, &personalCard.Sex, &personalCard.PhoneNumber, &personalCard.LKartId,
-					&personalCard.PositionId, &personalCard.DivisionId, &personalCard.RankId)
+					&personalCard.Id, &personalCard.FIO, &personalCard.JobBeginDate, &personalCard.Sex, &personalCard.DivisionId,
+					&personalCard.PositionId, &personalCard.RankId, &personalCard.Climate)
 				if err != nil {
 					fmt.Println(err)
 					return nil, err
@@ -86,10 +86,7 @@ func UpdatePersonalCard(personalCard models.PersonalCard) error {
 	} else {
 		connOracle, okOracle := database.DB.(*sql.DB)
 		if okOracle {
-			_, err := connOracle.Exec(`UPDATE parus.udo_personal_cards SET sex=:2, phone_number=:3, lkart_id=:4,
-                                postion_id=:5, division_id=:6, rank_id=:7 WHERE id=:1`, personalCard.Id, personalCard.PhoneNumber,
-				personalCard.LKartId, personalCard.PositionId, personalCard.DivisionId, personalCard.RankId)
-			return err
+			_ = connOracle
 		}
 	}
 	return nil
@@ -98,12 +95,12 @@ func UpdatePersonalCard(personalCard models.PersonalCard) error {
 func DeletePersonalCard(id int64) error {
 	connPostgres, okPostgres := database.DB.(*pgx.Conn)
 	if okPostgres {
-		_, err := connPostgres.Exec(context.Background(), `DELETE FROM parus.udo_personal_cards WHERE id=$1`, id)
+		_, err := connPostgres.Exec(context.Background(), `DELETE FROM parus.udo_personal_card WHERE id=$1`, id)
 		return err
 	} else {
 		connOracle, okOracle := database.DB.(*sql.DB)
 		if okOracle {
-			_, err := connOracle.Exec(`DELETE FROM parus.udo_personal_cards WHERE id=:1`, id)
+			_, err := connOracle.Exec(`DELETE FROM parus.udo_personal_card WHERE id=:1`, id)
 			return err
 		}
 	}

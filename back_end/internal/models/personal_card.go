@@ -21,11 +21,12 @@ type PersonalCard struct {
 		)
 	*/
 
-	Id          string `json:"id"`
-	Sex         string `json:"sex"`
-	PhoneNumber string `json:"phone_number"`
-	LKartId     string `json:"l_kart_id"`
-	PositionId  string `json:"position_id"`
-	DivisionId  string `json:"division_id"`
-	RankId      string `json:"rank_id"`
+	Id           string `json:"id"`
+	FIO          string `json:"fio"`
+	JobBeginDate string `json:"job_begin_date"`
+	Sex          string `json:"sex"`
+	DivisionId   string `json:"division_id"`
+	PositionId   string `json:"position_id"`
+	RankId       string `json:"rank_id"`
+	Climate      string `json:"climate"`
 }

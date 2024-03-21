@@ -18,8 +18,8 @@ type NormMunitSp struct {
 	CRN         string         `json:"crn"`
 	Version     string         `json:"version"`
 	Munition    string         `json:"munition"`
-	Period      string         `json:"period"`
-	QNT         string         `json:"QNT"`
+	Period      uint8          `json:"period"`
+	QNT         uint8          `json:"QNT"`
 	PackACS     sql.NullString `json:"pack_acs"`
 	ByDateFirst string         `json:"by_date_first"`
 	ByDateFact  string         `json:"by_date_fact"`

@@ -35,3 +35,38 @@ CREATE TABLE UDO_POSITION (
       CONSTRAINT POSITION_ID_PK PRIMARY KEY (id),
       CONSTRAINT POSITION_UNIQUE UNIQUE (name)
 )
+
+CREATE TABLE UDO_PERSONAL_CARD (
+    ID             NUMBER(17) NOT NULL,
+    FIO            VARCHAR2(80),
+    JOB_BEGIN_DATE DATE,
+    SEX            NUMBER(1),
+    DIVISION_ID    NUMBER(17),
+    POSITION_ID    NUMBER(17),
+    RANK_ID        NUMBER(17),
+    CLIMATE        VARCHAR2(100),
+    CONSTRAINT UDO_PERSONAL_CARD_PK PRIMARY KEY (ID),
+    CONSTRAINT UDO_PERSONAL_CARD_DIVISION_FK FOREIGN KEY (DIVISION_ID),
+    CONSTRAINT UDO_PERSONAL_CARD_POSITION_FK FOREIGN KEY (POSITION_ID),
+    CONSTRAINT UDO_PERSONAL_CARD_RANK_FK FOREIGN KEY (RANK_ID)
+)
+
+CREATE TABLE UDO_PERSONAL_CARD_NORM (
+    ID         NUMBER(17) NOT NULL,
+    LKART_ID   NUMBER(17) NOT NULL,
+    NORM_ID    NUMBER(17) NOT NULL,
+    BEGIN_DATE DATE,
+    END_DATE   DATE,
+    CONSTRAINT UDO_PERSONAL_CARD_NORM_PK PRIMARY KEY (ID)
+)
+
+select a.*
+from udo_personal_card c,
+     udo_personal_card_norm n,
+     udo_additional_condition a
+where c.id = n.lkart_id
+  and n.norm_id = a.norm_munition_id
+  and ( c.division_id = a.division_id or a.division_id is null )
+  and ( c.position_id = a.position_id  or  a.position_id is null  )
+  and ( c.rank_id = a.rank_id  or  a.rank_id is null  )
+  and ( c.climate = a.climate  or  a.climate is null  )

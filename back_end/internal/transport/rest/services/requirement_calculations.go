@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"github.com/jackc/pgx/v5"
 	"log"
-	"math"
 	"time"
 )
 
@@ -85,7 +84,7 @@ func RequirementCalculations(lkartId int64, calcDate string) ([]models.Need, err
 				need.Property = msp.Code
 				if difference/msp.Period > 0 {
 					// need.Need += (difference/msp.Period + 1.0) * msp.Qnt
-					need.Need = math.Ceil((difference / msp.Period) * msp.Qnt)
+					//need.Need = math.Ceil((difference / msp.Period) * msp.Qnt)
 				}
 				need.WornOut = 0
 				need.NotWrittenOff = 0
