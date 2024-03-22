@@ -60,13 +60,13 @@ CREATE TABLE UDO_PERSONAL_CARD_NORM (
     CONSTRAINT UDO_PERSONAL_CARD_NORM_PK PRIMARY KEY (ID)
 )
 
-select a.*
-from udo_personal_card c,
+SELECT a.*
+FROM udo_personal_card c,
      udo_personal_card_norm n,
      udo_additional_condition a
-where c.id = n.lkart_id
-  and n.norm_id = a.norm_munition_id
-  and ( c.division_id = a.division_id or a.division_id is null )
-  and ( c.position_id = a.position_id  or  a.position_id is null  )
-  and ( c.rank_id = a.rank_id  or  a.rank_id is null  )
-  and ( c.climate = a.climate  or  a.climate is null  )
+WHERE c.ID = :1
+  AND n.NORM_ID = a.NORM_MUNITION_ID
+  AND (c.DIVISION_ID = a.DIVISION_ID OR a.DIVISION_ID IS NULL)
+  AND (c.POSITION_ID = a.POSITION_ID  OR  a.POSITION_ID IS NULL)
+  AND (c.RANK_ID = a.RANK_ID  OR  a.RANK_ID IS NULL)
+  AND (c.CLIMATE = a.CLIMATE  OR  a.CLIMATE IS NULL)

@@ -6,13 +6,14 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/jackc/pgx/v5"
+	"log"
 	"math"
-	"time"
 )
 
 func BaseCalculations(personalCardId int64, calcDate string) ([]models.Need, error) {
 	var need models.Need
 	var needs []models.Need
+	var countMonth float64
 	var normMunitSp models.NormMunitSp
 	var normMunitSps []models.NormMunitSp
 	var addCond models.AdditionalCondition
@@ -55,46 +56,95 @@ func BaseCalculations(personalCardId int64, calcDate string) ([]models.Need, err
 			}
 
 			// получение дополнительных условий к актуальной норме
-			rows, err = connOracle.Query(`SELECT MUNITION_ID, SEX, DIVISION_ID, POSITION_ID, RANK_ID, CLIMATE,
-       												   REPLACE_MUNITION_ID, QUANT, PERIOD
-												FROM parus.udo_additional_condition WHERE NORM_MUNITION_ID = :1`, actualNormId)
+			//rows, err = connOracle.Query(`SELECT MUNITION_ID, SEX, DIVISION_ID, POSITION_ID, RANK_ID, CLIMATE,
+			//										   REPLACE_MUNITION_ID, QUANT, PERIOD
+			//									FROM parus.udo_additional_condition WHERE NORM_MUNITION_ID = :1`, actualNormId)
+			//for rows.Next() {
+			//	err = rows.Scan(&addCond.MunitionId, &addCond.Sex, &addCond.DivisionId, &addCond.PositionId,
+			//		&addCond.RankId, &addCond.Climate, &addCond.ReplaceMunitionId, &addCond.Quant, &addCond.Period)
+			//	if err != nil {
+			//		fmt.Println("Ошибка получения данных: ", err)
+			//	}
+			//	addConds = append(addConds, addCond)
+			//}
+			//if err != nil {
+			//	fmt.Println("Ошибка получения данных: ", err)
+			//}
+
+			// row = connOracle.QueryRow(`SELECT ADD_MONTHS(to_Date('29.02.2024','DD.MM.YYYY'), 12 ) from dual`)
+
+			// вычисляем разницу между датами (в месяцах)
+			row = connOracle.QueryRow(`SELECT MONTHS_BETWEEN(to_Date(:1, 'YYYY-MM-DD'), to_Date(:2, 'YYYY-MM-DD') ) from dual`,
+				calcDate, actualNormBeginDate[:10])
+			err = row.Scan(&countMonth)
+			if err != nil {
+				fmt.Println("Ошибка получения данных: ", err)
+			}
+
+			fmt.Println(countMonth)
+			for _, mun := range normMunitSps {
+				need.CalculationByDate = calcDate
+				need.Need = uint8(math.Ceil(countMonth/float64(mun.Period))) * mun.QNT
+				need.Counterparty = mun.Munition
+				needs = append(needs, need)
+				need = models.Need{}
+			}
+
+			// получение дополнительных условий к актуальной норме
+			rows, err = connOracle.Query(`SELECT a.MUNITION_ID, a.REPLACE_MUNITION_ID, a.QUANT, a.PERIOD
+									FROM udo_personal_card c,
+										 udo_personal_card_norm n,
+										 udo_additional_condition a
+									WHERE c.ID = :1
+									  AND n.NORM_ID = a.NORM_MUNITION_ID
+									  AND (c.DIVISION_ID = a.DIVISION_ID OR a.DIVISION_ID IS NULL)
+									  AND (c.POSITION_ID = a.POSITION_ID  OR  a.POSITION_ID IS NULL)
+									  AND (c.RANK_ID = a.RANK_ID  OR  a.RANK_ID IS NULL)
+									  AND (c.CLIMATE = a.CLIMATE  OR  a.CLIMATE IS NULL)`, personalCardId)
+			if err != nil {
+				fmt.Println("Ошибка получения данных: ", err)
+			}
+			defer func(rows *sql.Rows) {
+				err = rows.Close()
+				if err != nil {
+					log.Fatal(err)
+				}
+			}(rows)
 			for rows.Next() {
-				err = rows.Scan(&addCond.MunitionId, &addCond.Sex, &addCond.DivisionId, &addCond.PositionId,
-					&addCond.RankId, &addCond.Climate, &addCond.ReplaceMunitionId, &addCond.Quant, &addCond.Period)
+				err = rows.Scan(&addCond.MunitionId, &addCond.ReplaceMunitionId, &addCond.Quant, &addCond.Period)
 				if err != nil {
 					fmt.Println("Ошибка получения данных: ", err)
 				}
 				addConds = append(addConds, addCond)
 			}
-			if err != nil {
-				fmt.Println("Ошибка получения данных: ", err)
-			}
 
-			// row = connOracle.QueryRow(`SELECT ADD_MONTHS(to_Date('29.02.2024','DD.MM.YYYY'), 12 ) from dual`)
-			fmt.Println(calcDate, actualNormBeginDate)
-			row = connOracle.QueryRow(`SELECT MONTHS_BETWEEN(to_Date(:1,'DD.MM.YYYY'), to_Date(:2,'DD.MM.YYYY') ) from dual`,
-				calcDate, actualNormBeginDate[:10])
-			var countMonth string
-			err = row.Scan(&countMonth)
-			if err != nil {
-				fmt.Println("Ошибка получения данных: ", err)
+			// формирование потребностей с учетом дополнительных условий
+			for _, mun := range addConds {
+				if !mun.ReplaceMunitionId.Valid {
+					need.CalculationByDate = "New munition"
+					need.Need = uint8(math.Ceil(countMonth/float64(mun.Period))) * mun.Quant
+					needs = append(needs, need)
+					need = models.Need{}
+				} else {
+					// TODO: подумать???
+					for i, replaceMun := range needs {
+						if mun.ReplaceMunitionId.String == replaceMun.Counterparty {
+							needs[i].CalculationByDate = "Replace"
+							needs[i].Need = uint8(math.Ceil(countMonth/float64(mun.Period))) * mun.Quant
+						}
+					}
+				}
 			}
-			fmt.Println(countMonth)
 		}
 	}
 
-	// вычисляем разницу между датами (в месяцах)
-	t1, _ := time.Parse("2006-01-02", calcDate)
-	t2, _ := time.Parse("2006-01-02", actualNormBeginDate[:10])
-	countMonth := math.Ceil(t1.Sub(t2).Hours() / 24 / 30)
-
-	for _, mun := range normMunitSps {
-		need.CalculationByDate = calcDate
-		need.Need = uint8(math.Ceil(countMonth/float64(mun.Period))) * mun.QNT
-		needs = append(needs, need)
-	}
+	/*
+		// вычисляем разницу между датами (в месяцах)
+			t1, _ := time.Parse("2006-01-02", calcDate)
+			t2, _ := time.Parse("2006-01-02", actualNormBeginDate[:10])
+			countMonth := math.Ceil(t1.Sub(t2).Hours() / 24 / 30)
+	*/
 
 	fmt.Println(len(needs))
-
 	return needs, nil
 }
