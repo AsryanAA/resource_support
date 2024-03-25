@@ -47,7 +47,7 @@ func InitServer(host string, port int) error {
 			calculations := v1.Group("calculations")
 			{
 				calculations.GET("base/:id", handlers.RequirementCalculations)
-				calculations.GET("actual/:id", handlers.BaseCalculations)
+				calculations.GET("actual/:id/:calc_date", handlers.BaseCalculations)
 			}
 
 			position := v1.Group("position")

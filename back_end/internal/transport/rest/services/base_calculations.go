@@ -19,8 +19,10 @@ func BaseCalculations(personalCardId int64, calcDate string) ([]models.Need, err
 	var addCond models.AdditionalCondition
 	var addConds []models.AdditionalCondition
 	// var personalCardNorm models.PersonalCardNorm
+	var lkartNormSP models.LkartNormSP
+	var lkartNormSPs []models.LkartNormSP // входящие остатки
 	var personalCard models.PersonalCard
-	var actualNormId, actualNormBeginDate string
+	var actualNormId, actualNormBeginDate, openingBalancesId string
 
 	connPostgres, okPostgres := database.DB.(*pgx.Conn)
 	if okPostgres {
@@ -29,8 +31,8 @@ func BaseCalculations(personalCardId int64, calcDate string) ([]models.Need, err
 		connOracle, okOracle := database.DB.(*sql.DB)
 		if okOracle {
 			// получение актуальной нормы обеспечения
-			row := connOracle.QueryRow(`SELECT NORM_ID, BEGIN_DATE FROM parus.udo_personal_card_norm WHERE lkart_id = :1 AND END_DATE IS NULL`, personalCardId)
-			err := row.Scan(&actualNormId, &actualNormBeginDate)
+			row := connOracle.QueryRow(`SELECT ID, NORM_ID, BEGIN_DATE FROM parus.udo_personal_card_norm WHERE lkart_id = :1 AND END_DATE IS NULL`, personalCardId)
+			err := row.Scan(&openingBalancesId, &actualNormId, &actualNormBeginDate)
 			if err != nil {
 				fmt.Println("Ошибка получения данных: ", err)
 			}
@@ -135,6 +137,23 @@ func BaseCalculations(personalCardId int64, calcDate string) ([]models.Need, err
 					}
 				}
 			}
+
+			// получение входящих остатков
+			rows, err = connOracle.Query(`SELECT * FROM parus.udo_lkart_normsp WHERE prn = :1`, openingBalancesId)
+			if err != nil {
+				fmt.Println("Ошибка получения данных: ", err)
+			}
+			defer rows.Close()
+			for rows.Next() {
+				err = rows.Scan(&lkartNormSP.RN, &lkartNormSP.PRN, &lkartNormSP.Munition, &lkartNormSP.Period,
+					&lkartNormSP.InQntNeed, &lkartNormSP.InQntNosPis, &lkartNormSP.BeginDate, &lkartNormSP.EndDate,
+					&lkartNormSP.StopDate, &lkartNormSP.InQntTatters, &lkartNormSP.Note)
+				if err != nil {
+					fmt.Println("Ошибка получения данных: ", err)
+				}
+				lkartNormSPs = append(lkartNormSPs, lkartNormSP)
+			}
+			fmt.Println(lkartNormSPs)
 		}
 	}
 

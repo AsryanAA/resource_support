@@ -13,7 +13,8 @@ import (
 // @Router /calculation [get]
 func BaseCalculations(ctx *gin.Context) {
 	id, _ := strconv.Atoi(ctx.Param("id"))
-	data, err := services.BaseCalculations(int64(id), "2024-07-06")
+	calcDate := ctx.Param("calc_date")
+	data, err := services.BaseCalculations(int64(id), calcDate)
 	if err != nil {
 		ctx.IndentedJSON(http.StatusBadRequest, gin.H{
 			"errorMessage": err,
